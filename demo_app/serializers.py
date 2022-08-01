@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
+from .models import Pokemon, Collection
+
 
 # Create your views here.
 User = get_user_model()
@@ -16,14 +18,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 		model = User
 		fields = ["username", "password","first_name", "last_name"]
 
+	def create(self, validated_data):
+		password = validated_data.pop("password")
+		new_user = User(**validated_data)
+		new_user.set_password(password)
+		new_user.save()
 
-		def create(self, validated_data):
-			password = validated_data.pop("password")
-			new_user = User(**validated_data)
-			new_user.set_password(password)
-			new_user.save()
-
-			return validated_data
+		return validated_data
 
 
 
@@ -43,10 +44,8 @@ class UserLoginSerializer(serializers.Serializer):
 		except User.DoesNotExist:
 			raise serializers.ValidationError("Looks like user doesn't exist..")#what if no
 
-
 		if not user.check_password(password):
 			raise serializers.ValidationError("Looks like password is incorrect..")
-
 
 		#token code here
 
@@ -56,5 +55,31 @@ class UserLoginSerializer(serializers.Serializer):
 		data["access"] = token
 
 		return data
+
+
+
+
+class ListSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Pokemon
+		exclude = ('type',)
+
+
+
+class DetailSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Pokemon
+		fields = '__all__'
+
+
+class CreateSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Pokemon
+		fields = '__all__'
+
+
+
+
+
 
 
